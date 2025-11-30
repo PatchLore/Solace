@@ -1,0 +1,9 @@
+{
+  "name": "Dark Academia Corridor",
+  "prompt": "A gothic stone corridor with candles on the walls, rain ambience outside, warm flickering shadows, liminal academic atmosphere, 8K high realism",
+  "negativePrompt": "modern, bright, clean, people, text, cluttered, colorful",
+  "style": "dark_academia_corridor",
+  "model": "flux",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+

@@ -1,0 +1,9 @@
+{
+  "name": "Dark Academia Study",
+  "prompt": "A dark academia study room, candlelit wooden desk, leather-bound books, vintage lamps, gothic shadows, moody warm light, rich textures, old library ambiance, high-detail 8K, cinematic, warm tones",
+  "negativePrompt": "modern furniture, bright lighting, clean minimal, people, text, cluttered",
+  "style": "dark_academia_study",
+  "model": "flux",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+

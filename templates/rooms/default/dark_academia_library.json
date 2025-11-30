@@ -1,0 +1,9 @@
+{
+  "name": "Dark Academia Library",
+  "prompt": "A dimly lit gothic library with towering bookshelves, candle flicker, dust particles in warm rays of light, rich mahogany textures, vintage academic aesthetic, 8K ultra detailed",
+  "negativePrompt": "modern, bright, clean, people, text, cluttered, colorful",
+  "style": "dark_academia_library",
+  "model": "flux",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+

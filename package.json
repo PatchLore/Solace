@@ -1,0 +1,42 @@
+{
+  "name": "solace-breathing-room",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "node scripts/check-ffmpeg.js",
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "setup-placeholders": "node scripts/create-placeholder-images.js",
+    "install-ffmpeg": "node scripts/install-ffmpeg.js",
+    "install-ffmpeg-snapshot": "node scripts/install-ffmpeg-snapshot.js",
+    "verify-ffmpeg": "node scripts/check-ffmpeg.js",
+    "ffmpeg-doctor": "node scripts/ffmpeg-doctor.js"
+  },
+  "dependencies": {
+    "@fal-ai/serverless-client": "^0.7.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "canvas": "^3.2.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "runware": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8",
+    "eslint-config-next": "^15.0.0",
+    "extract-zip": "^2.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}

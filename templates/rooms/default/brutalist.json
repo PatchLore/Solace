@@ -1,0 +1,9 @@
+{
+  "name": "Brutalist Concrete Cube",
+  "prompt": "brutalist concrete room, raw concrete walls, geometric shadows, minimalist architecture, monochromatic, dramatic lighting, 16:9 aspect ratio, architectural photography",
+  "negativePrompt": "colorful, decorated, soft materials, warm lighting, people, furniture",
+  "style": "brutalist",
+  "model": "flux",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+

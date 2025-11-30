@@ -1,0 +1,9 @@
+{
+  "name": "Japanese Zen Room",
+  "prompt": "minimalist japanese zen room, tatami mats, soft natural light filtering through paper screens, clean lines, peaceful atmosphere, 16:9 aspect ratio, ambient lighting, serene interior",
+  "negativePrompt": "cluttered, modern furniture, bright colors, harsh lighting, people, text",
+  "style": "zen",
+  "model": "flux",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+

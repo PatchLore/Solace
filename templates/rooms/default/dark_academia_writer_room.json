@@ -1,0 +1,9 @@
+{
+  "name": "Dark Academia Writer Room",
+  "prompt": "A writer's candlelit chamber, ink bottle, paper, quill, window with rain, warm firelight illuminating vintage wood textures, dark academia aesthetic, 8K",
+  "negativePrompt": "modern, bright, clean, people, text, cluttered, colorful, digital",
+  "style": "dark_academia_writer_room",
+  "model": "flux",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+

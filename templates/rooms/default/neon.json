@@ -1,0 +1,9 @@
+{
+  "name": "Neon Corridor",
+  "prompt": "cyberpunk neon corridor, futuristic hallway, neon lights, dark atmosphere, sci-fi aesthetic, 16:9 aspect ratio, ambient glow, cinematic lighting",
+  "negativePrompt": "natural light, daylight, warm colors, traditional architecture, people, cluttered",
+  "style": "neon",
+  "model": "seedream",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+

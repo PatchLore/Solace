@@ -1,0 +1,9 @@
+{
+  "name": "White Sci-Fi Room",
+  "prompt": "futuristic white sci-fi room, clean minimalist space, ambient lighting, high-tech aesthetic, sterile environment, 16:9 aspect ratio, soft glow, architectural",
+  "negativePrompt": "dark, cluttered, traditional, warm colors, people, furniture, decorations",
+  "style": "scifi",
+  "model": "flux",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+
