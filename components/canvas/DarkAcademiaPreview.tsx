@@ -268,7 +268,7 @@ export default function DarkAcademiaPreview({
       <canvas
         ref={canvasRef}
         className="w-full h-full"
-        style={{ imageRendering: "high-quality" }}
+        style={{ imageRendering: "smooth" }}
       />
     </div>
   );
