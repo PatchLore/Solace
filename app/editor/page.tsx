@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import BreathingRoomPreview from "@/components/canvas/BreathingRoomPreview";
 import DarkAcademiaPreview from "@/components/canvas/DarkAcademiaPreview";
 import ElevatorPreview from "@/components/canvas/ElevatorPreview";
@@ -35,7 +35,7 @@ const DARK_ACADEMIA_ROOM_STYLES = [
   { id: "dark_academia_writer_room", name: "Dark Academia Writer Room" },
 ];
 
-export default function EditorPage() {
+function EditorPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -1215,6 +1215,14 @@ export default function EditorPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading editor…</div>}>
+      <EditorPage />
+    </Suspense>
   );
 }
 
