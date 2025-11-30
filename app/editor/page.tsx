@@ -332,19 +332,14 @@ function EditorPage() {
     }
   };
 
-  const handleRender = async (options?: { testMode?: boolean }) => {
-    const testMode = options?.testMode ?? false;
-    
+  const handleRender = async (testMode: boolean = false) => {
     // Space Elevator render (cloud-rendered)
     if (selectedTemplate === "space-elevator") {
-      setIsRendering(true);
-      setRenderStatus(testMode ? "Running 10s test render…" : "Starting full render…");
       try {
+        setIsRendering(true);
+        setRenderStatus(testMode ? "Running 10s test render…" : "Starting render…");
+
         const elevatorImagePath = "/elevators/Elevator1.jpg"; // Default, can be made dynamic
-        
-        // Use test mode settings or selected loop length
-        const durationSeconds = testMode ? 10 : selectedDuration; // guaranteed 5/10/20
-        const intensity = testMode ? 0.4 : motionIntensity;
         
         const res = await fetch("/api/render", {
           method: "POST",
@@ -352,23 +347,25 @@ function EditorPage() {
           body: JSON.stringify({
             template: "space-elevator",
             elevatorImage: elevatorImagePath,
-            intensity: intensity,
-            durationSeconds: durationSeconds,
+            intensity: motionIntensity,
+            durationSeconds: selectedDuration,
             audio: selectedAudio,
             testMode: testMode,
           })
         });
 
         const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || "Space elevator render failed");
+
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Space Elevator render failed");
+        }
 
         setRenderedVideoUrl(data.videoUrl);
         setRenderStatus("");
 
-      } catch (err) {
-        console.error("Space elevator render failed:", err);
-        alert("Render failed: " + (err instanceof Error ? err.message : "Unknown error"));
-        setRenderStatus("");
+      } catch (error: any) {
+        console.error(error);
+        setRenderStatus(error.message || "Render failed");
       } finally {
         setIsRendering(false);
       }
@@ -905,23 +902,28 @@ function EditorPage() {
                         ))}
                       </div>
                       <p className="text-sm text-gray-500 mt-2">
-                        This clip is designed to loop. For long streams, simply loop it in your editor or streaming software.
+                        This clip is designed to loop. For long streams, simply loop it in your editor or streaming platform.
                       </p>
+                      {!process.env.NEXT_PUBLIC_RUNWARE_MOTION_MODEL && (
+                        <div className="p-2 text-sm bg-yellow-100 border border-yellow-300 mt-4 rounded text-yellow-800">
+                          ⚠️ Runware motion is not configured. 10s/20s loops will fallback to LTX (higher cost).
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-col gap-2 mt-4">
                       <button
-                        className="flex-1 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
-                        onClick={() => handleRender({ testMode: true })}
+                        onClick={() => handleRender(false)}
                         disabled={isRendering}
+                        className="w-full py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
                       >
-                        Test Render (10s)
+                        {isRendering ? "Generating..." : "Generate Video"}
                       </button>
                       <button
-                        className="flex-1 px-4 py-2 rounded bg-accent-violet text-white hover:bg-accent-violet/90 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-all glow-violet"
-                        onClick={() => handleRender({ testMode: false })}
+                        onClick={() => handleRender(true)}
                         disabled={isRendering}
+                        className="w-full py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
                       >
-                        {isRendering ? "Generating..." : "Full Render"}
+                        Test Render (10s)
                       </button>
                     </div>
                     {renderStatus && (
@@ -1181,6 +1183,7 @@ function EditorPage() {
             </div>
 
             {/* Render Controls */}
+            {selectedTemplate !== "space-elevator" && (
             <div className="bg-panel border border-border rounded-lg p-4">
               <h2 className="text-lg mb-4 font-medium">Generate Video</h2>
               <div className="space-y-4">
@@ -1237,7 +1240,7 @@ function EditorPage() {
                   </p>
                 </div>
                 <button
-                  onClick={handleRender}
+                  onClick={() => handleRender(false)}
                   disabled={isRendering}
                   className={`w-full py-3 rounded-lg font-medium transition-all ${
                     isRendering
@@ -1254,9 +1257,10 @@ function EditorPage() {
                       src={renderedVideoUrl}
                       controls
                       loop
+                      autoPlay
                       className="w-full rounded shadow mt-2"
                     />
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-xs text-gray-500 mt-1">
                       Preview is looping to simulate long playback.
                     </p>
                     <a
@@ -1271,6 +1275,7 @@ function EditorPage() {
                 )}
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>

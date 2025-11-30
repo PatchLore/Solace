@@ -47,12 +47,28 @@ export async function POST(request: Request) {
         );
       }
 
+      // Validate durationSeconds (required for space-elevator)
+      if (!durationSeconds && !testMode) {
+        return NextResponse.json(
+          { ok: false, error: "durationSeconds missing" },
+          { status: 400 }
+        );
+      }
+
       console.log("🚀 [SpaceElevator] Starting render…");
       console.log("Space Elevator testMode:", testMode);
       
-      // Apply duration overrides (loop mode)
-      const finalDurationSeconds = testMode ? 10 : (durationSeconds ? Number(durationSeconds) : Number(duration));
+      // Apply duration overrides (loop mode) - only 5s/10s/20s allowed
+      const finalDurationSeconds = testMode ? 10 : Number(durationSeconds);
       const motionIntensity = testMode ? 0.4 : Number(intensity);
+      
+      // Validate duration is one of the allowed values
+      if (!testMode && ![5, 10, 20].includes(finalDurationSeconds)) {
+        return NextResponse.json(
+          { ok: false, error: "durationSeconds must be 5, 10, or 20" },
+          { status: 400 }
+        );
+      }
       
       console.log("Duration (seconds):", finalDurationSeconds);
       console.log("Motion intensity:", motionIntensity);

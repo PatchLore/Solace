@@ -10,34 +10,52 @@ export async function generateSpaceElevatorVideo(
 
   // ---- Validate environment ----
   const hasLtx = !!process.env.FAL_MODEL_LTX;
-  const hasRunwareMotion = !!process.env.RUNWARE_MODEL_MOTION;
+  const RUNWARE_MOTION_MODEL = process.env.RUNWARE_MODEL_MOTION;
+  const hasRunwareMotion = !!RUNWARE_MOTION_MODEL;
 
   if (!hasLtx && !hasRunwareMotion) {
     throw new Error("No motion model available (LTX or Runware).");
   }
 
-  // ---- Force Runware if duration >= 10 seconds or explicitly requested ----
-  if (forceRunware || durationSeconds >= 10) {
-    if (hasRunwareMotion) {
-      console.log("🎥 Using Runware motion (forced for duration >= 10s)...");
-
-      const motion = await runware.motion.generate({
-        model: process.env.RUNWARE_MODEL_MOTION!,
-        image_url: imageUrl,
-        motion: "vertical-up",
-        strength: intensity,
-        fps: 30,
-        duration: durationSeconds
-      });
-
-      if (!motion?.video_url) {
-        throw new Error("Runware motion failed: no video_url returned.");
-      }
-
-      return motion.video_url;
+  // ---- Determine provider based on duration ----
+  let provider: "ltx" | "runware" = "ltx";
+  
+  if (durationSeconds >= 10) {
+    if (!RUNWARE_MOTION_MODEL) {
+      console.warn("⚠️ Runware motion model missing — falling back to LTX motion.");
+      provider = "ltx";
     } else {
-      throw new Error("Runware motion required for durations >= 10 seconds, but RUNWARE_MODEL_MOTION is not configured.");
+      provider = "runware";
     }
+  } else {
+    provider = "ltx"; // 5s fast preview uses LTX
+  }
+
+  console.log("Selected provider:", provider, "for duration:", durationSeconds);
+
+  // ---- Force Runware if explicitly requested (and available) ----
+  if (forceRunware && hasRunwareMotion) {
+    provider = "runware";
+  }
+
+  // ---- Use Runware if selected ----
+  if (provider === "runware" && hasRunwareMotion) {
+    console.log("🎥 Using Runware motion (forced for duration >= 10s)...");
+
+    const motion = await runware.motion.generate({
+      model: RUNWARE_MOTION_MODEL!,
+      image_url: imageUrl,
+      motion: "vertical-up",
+      strength: intensity,
+      fps: 30,
+      duration: durationSeconds
+    });
+
+    if (!motion?.video_url) {
+      throw new Error("Runware motion failed: no video_url returned.");
+    }
+
+    return motion.video_url;
   }
 
   // ---- Try LTX first (for durations < 10 seconds) ----
