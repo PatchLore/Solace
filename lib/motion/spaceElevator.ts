@@ -1,118 +1,65 @@
-// ------------------------------------------------------------
-// Space Elevator Motion Engine (LTX → Runware Fallback)
-// ------------------------------------------------------------
-
 import { falClient } from "@/lib/fal";
 import { runware } from "@/lib/runware";
 
-interface SpaceElevatorOptions {
-  imageUrl: string;
-  intensity: number;
-  durationSeconds: number;
-}
-
-// ------------------------------------------------------------
-// Environment Validation
-// ------------------------------------------------------------
-function validateEnv() {
-  const hasLTX = !!process.env.FAL_MODEL_LTX;
-  const hasRunware = !!process.env.RUNWARE_MODEL_MOTION;
-
-  if (!hasLTX && !hasRunware) {
-    throw new Error(
-      "No motion models configured. Set FAL_MODEL_LTX or RUNWARE_MODEL_MOTION."
-    );
-  }
-}
-
-// ------------------------------------------------------------
-// LTX Motion (Primary Engine)
-// ------------------------------------------------------------
-async function tryLTXMotion(
+export async function generateSpaceElevatorVideo(
   imageUrl: string,
   intensity: number,
   durationSeconds: number
 ): Promise<string> {
-  if (!process.env.FAL_MODEL_LTX) {
-    throw new Error("LTX model unavailable. Skipping to Runware fallback.");
+
+  // ---- Validate environment ----
+  const hasLtx = !!process.env.FAL_MODEL_LTX;
+  const hasRunwareMotion = !!process.env.RUNWARE_MODEL_MOTION;
+
+  if (!hasLtx && !hasRunwareMotion) {
+    throw new Error("No motion model available (LTX or Runware).");
   }
 
-  console.log("🎥 [SpaceElevator] Attempting LTX cinematic motion...");
+  // ---- Try LTX first ----
+  if (hasLtx) {
+    try {
+      console.log("🎥 Using LTX motion...");
 
-  try {
-    const videoResult = await falClient.subscribe(
-      process.env.FAL_MODEL_LTX!,
-      {
-        url: imageUrl,
-        prompt: "slow upward elevator ride through space, cinematic",
-        fps: 30,
-        motion: intensity,
-        duration: durationSeconds,
+      const response = await falClient.subscribe(
+        process.env.FAL_MODEL_LTX!,
+        {
+          input_image: imageUrl,          // CORRECT PARAM
+          motion_strength: intensity,     // CORRECT PARAM
+          duration: durationSeconds,      // CORRECT PARAM
+          fps: 30                         // CORRECT PARAM
+        } as any
+      ) as any;
+
+      // LTX returns { video_url: string }
+      if (response?.video_url) {
+        return response.video_url;
       }
-    );
 
-    if (!videoResult?.video?.url) {
-      throw new Error("LTX response missing video URL.");
+      console.warn("⚠️ LTX returned no video_url, falling back...");
+    } catch (err) {
+      console.warn("❌ LTX motion failed, falling back to Runware:", err);
+    }
+  }
+
+  // ---- Runware fallback ----
+  if (hasRunwareMotion) {
+    console.log("🎥 Using Runware motion fallback...");
+
+    const motion = await runware.motion.generate({
+      model: process.env.RUNWARE_MODEL_MOTION!,
+      image_url: imageUrl,
+      motion: "vertical-up",
+      strength: intensity,
+      fps: 30,
+      duration: durationSeconds
+    });
+
+    if (!motion?.video_url) {
+      throw new Error("Runware motion failed: no video_url returned.");
     }
 
-    console.log("🎞️ [SpaceElevator] LTX motion successful.");
-    return videoResult.video.url;
-  } catch (err) {
-    console.error("❌ [SpaceElevator] LTX motion failed:", err);
-    throw err;
+    return motion.video_url;
   }
+
+  throw new Error("No motion route available.");
 }
-
-// ------------------------------------------------------------
-// Runware Motion (Fallback Engine)
-// ------------------------------------------------------------
-async function useRunwareMotion(
-  imageUrl: string,
-  intensity: number,
-  durationSeconds: number
-): Promise<string> {
-  if (!process.env.RUNWARE_MODEL_MOTION) {
-    throw new Error("Runware motion model missing from env.");
-  }
-
-  console.log("🛟 [SpaceElevator] Falling back to Runware motion...");
-
-  const motion = await runware.motion.generate({
-    model: process.env.RUNWARE_MODEL_MOTION!,
-    image_url: imageUrl,
-    motion: "vertical-up",
-    strength: intensity,
-    fps: 30,
-    duration: durationSeconds,
-  });
-
-  if (!motion?.video_url) {
-    throw new Error("Runware motion response missing video_url.");
-  }
-
-  console.log("🎞️ [SpaceElevator] Runware fallback succeeded.");
-  return motion.video_url;
-}
-
-// ------------------------------------------------------------
-// Main Export — always returns a video URL
-// ------------------------------------------------------------
-export async function generateSpaceElevatorVideo(options: SpaceElevatorOptions) {
-  const { imageUrl, intensity, durationSeconds } = options;
-
-  validateEnv();
-
-  console.log("🚀 [SpaceElevator] Starting motion pipeline...");
-
-  // Try LTX first
-  try {
-    return await tryLTXMotion(imageUrl, intensity, durationSeconds);
-  } catch (_) {
-    console.log("⚠️ [SpaceElevator] Switching to fallback...");
-  }
-
-  // Fallback: Runware
-  return await useRunwareMotion(imageUrl, intensity, durationSeconds);
-}
-
-

@@ -56,11 +56,11 @@ export async function POST(request: Request) {
         : `${baseUrl}${elevatorImage}`;
 
       // Generate motion video with LTX → Runware fallback
-      const videoUrl = await generateSpaceElevatorVideo({
+      const videoUrl = await generateSpaceElevatorVideo(
         imageUrl,
-        intensity: Number(intensity),
-        durationSeconds: Number(duration),
-      });
+        Number(intensity),
+        Number(duration)
+      );
 
       console.log("🎉 [SpaceElevator] Render complete:", videoUrl);
 
