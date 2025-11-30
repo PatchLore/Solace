@@ -4,7 +4,8 @@ import { runware } from "@/lib/runware";
 export async function generateSpaceElevatorVideo(
   imageUrl: string,
   intensity: number,
-  durationSeconds: number
+  durationSeconds: number,
+  forceRunware: boolean = false
 ): Promise<string> {
 
   // ---- Validate environment ----
@@ -15,7 +16,31 @@ export async function generateSpaceElevatorVideo(
     throw new Error("No motion model available (LTX or Runware).");
   }
 
-  // ---- Try LTX first ----
+  // ---- Force Runware if duration >= 10 seconds or explicitly requested ----
+  if (forceRunware || durationSeconds >= 10) {
+    if (hasRunwareMotion) {
+      console.log("🎥 Using Runware motion (forced for duration >= 10s)...");
+
+      const motion = await runware.motion.generate({
+        model: process.env.RUNWARE_MODEL_MOTION!,
+        image_url: imageUrl,
+        motion: "vertical-up",
+        strength: intensity,
+        fps: 30,
+        duration: durationSeconds
+      });
+
+      if (!motion?.video_url) {
+        throw new Error("Runware motion failed: no video_url returned.");
+      }
+
+      return motion.video_url;
+    } else {
+      throw new Error("Runware motion required for durations >= 10 seconds, but RUNWARE_MODEL_MOTION is not configured.");
+    }
+  }
+
+  // ---- Try LTX first (for durations < 10 seconds) ----
   if (hasLtx) {
     try {
       console.log("🎥 Using LTX motion...");

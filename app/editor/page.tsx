@@ -11,14 +11,7 @@ import RoomImageUploader from "@/components/RoomImageUploader";
 import type { BreathingRoomConfig, DarkAcademiaConfig, RoomTemplate, RoomType } from "../types";
 import { DEFAULT_ROOM } from "../types";
 import { roomConfigs } from "@/config/rooms";
-import { elevatorAudioTracks } from "@/lib/audio/audioFiles";
-
-const AUDIO_TRACKS = [
-  { id: "brown-noise", name: "Brown Noise" },
-  { id: "white-noise", name: "White Noise" },
-  { id: "low-hum", name: "Low Hum" },
-  { id: "soft-pad", name: "Soft Pad" },
-];
+import { AUDIO_TRACKS } from "@/data/audioTracks";
 
 const DARK_ACADEMIA_AUDIO_TRACKS = [
   { id: "candle-crackle", name: "Candle Crackle" },
@@ -86,6 +79,7 @@ function EditorPage() {
   const setConfig = selectedTemplate === "dark-academia-room" ? setDarkAcademiaConfig : setBreathingConfig;
 
   const [isRendering, setIsRendering] = useState(false);
+  const [renderStatus, setRenderStatus] = useState<string>("");
   const [renderedVideoUrl, setRenderedVideoUrl] = useState<string | null>(null);
 
   // Room generation state
@@ -116,6 +110,9 @@ function EditorPage() {
   
   // Space Elevator audio selection state
   const [selectedAudio, setSelectedAudio] = useState("/audio/brown-noise.mp3");
+  
+  // Space Elevator loop length state (5s/10s/20s)
+  const [selectedDuration, setSelectedDuration] = useState(10); // default 10s
 
   // Load custom templates on mount
   useEffect(() => {
@@ -335,15 +332,19 @@ function EditorPage() {
     }
   };
 
-  const handleRender = async () => {
+  const handleRender = async (options?: { testMode?: boolean }) => {
+    const testMode = options?.testMode ?? false;
+    
     // Space Elevator render (cloud-rendered)
     if (selectedTemplate === "space-elevator") {
       setIsRendering(true);
+      setRenderStatus(testMode ? "Running 10s test render…" : "Starting full render…");
       try {
         const elevatorImagePath = "/elevators/Elevator1.jpg"; // Default, can be made dynamic
         
-        // Convert durationHours to seconds (clamp to 5-120s)
-        const durationSeconds = Math.max(5, Math.min(Math.floor(breathingConfig.durationHours * 3600), 120));
+        // Use test mode settings or selected loop length
+        const durationSeconds = testMode ? 10 : selectedDuration; // guaranteed 5/10/20
+        const intensity = testMode ? 0.4 : motionIntensity;
         
         const res = await fetch("/api/render", {
           method: "POST",
@@ -351,9 +352,10 @@ function EditorPage() {
           body: JSON.stringify({
             template: "space-elevator",
             elevatorImage: elevatorImagePath,
-            intensity: motionIntensity,
-            duration: durationSeconds,
+            intensity: intensity,
+            durationSeconds: durationSeconds,
             audio: selectedAudio,
+            testMode: testMode,
           })
         });
 
@@ -361,10 +363,12 @@ function EditorPage() {
         if (!res.ok || !data.ok) throw new Error(data.error || "Space elevator render failed");
 
         setRenderedVideoUrl(data.videoUrl);
+        setRenderStatus("");
 
       } catch (err) {
         console.error("Space elevator render failed:", err);
         alert("Render failed: " + (err instanceof Error ? err.message : "Unknown error"));
+        setRenderStatus("");
       } finally {
         setIsRendering(false);
       }
@@ -864,18 +868,65 @@ function EditorPage() {
                       <label className="block text-sm text-gray-400 mb-2 font-medium">
                         Background Audio
                       </label>
-                      <select
-                        value={selectedAudio}
-                        onChange={(e) => setSelectedAudio(e.target.value)}
-                        className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
-                      >
-                        {elevatorAudioTracks.map((track) => (
-                          <option key={track.file} value={track.file}>
-                            {track.name}
-                          </option>
-                        ))}
-                      </select>
+                      {(() => {
+                        const tracks = AUDIO_TRACKS; // ← force all to show
+                        console.log("Audio tracks loaded:", tracks);
+                        return (
+                          <select
+                            value={selectedAudio}
+                            onChange={(e) => setSelectedAudio(e.target.value)}
+                            className="w-full bg-background border border-border rounded px-3 py-2 text-sm"
+                          >
+                            {tracks.map((track) => (
+                              <option key={track.id} value={track.url}>
+                                {track.name}
+                              </option>
+                            ))}
+                          </select>
+                        );
+                      })()}
                     </div>
+                    {/* Loop Length Selector */}
+                    <div className="mt-6">
+                      <label className="block font-medium mb-2 text-sm text-gray-400">Loop Length</label>
+                      <div className="flex gap-3">
+                        {[5, 10, 20].map((sec) => (
+                          <button
+                            key={sec}
+                            onClick={() => setSelectedDuration(sec)}
+                            className={`px-4 py-2 rounded border transition-all ${
+                              selectedDuration === sec
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-background text-gray-300 border-border hover:bg-background/80"
+                            }`}
+                          >
+                            {sec}s
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        This clip is designed to loop. For long streams, simply loop it in your editor or streaming software.
+                      </p>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        className="flex-1 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+                        onClick={() => handleRender({ testMode: true })}
+                        disabled={isRendering}
+                      >
+                        Test Render (10s)
+                      </button>
+                      <button
+                        className="flex-1 px-4 py-2 rounded bg-accent-violet text-white hover:bg-accent-violet/90 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-all glow-violet"
+                        onClick={() => handleRender({ testMode: false })}
+                        disabled={isRendering}
+                      >
+                        {isRendering ? "Generating..." : "Full Render"}
+                      </button>
+                    </div>
+                    {renderStatus && (
+                      <p className="text-sm text-gray-400 mt-2">{renderStatus}</p>
+                    )}
                   </div>
                 </div>
               </>
@@ -1199,11 +1250,20 @@ function EditorPage() {
                 {renderedVideoUrl && (
                   <div className="mt-4 p-4 bg-green-900/20 border border-green-500/50 rounded-lg">
                     <p className="text-sm text-green-400 mb-2">Video generated successfully!</p>
+                    <video
+                      src={renderedVideoUrl}
+                      controls
+                      loop
+                      className="w-full rounded shadow mt-2"
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Preview is looping to simulate long playback.
+                    </p>
                     <a
                       href={renderedVideoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-accent-cyan hover:underline text-sm"
+                      className="text-accent-cyan hover:underline text-sm mt-2 inline-block"
                     >
                       View Video →
                     </a>

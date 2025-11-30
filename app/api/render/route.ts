@@ -20,6 +20,8 @@ export async function POST(request: Request) {
       elevatorImage,
       intensity = 0.4,
       duration = 5,
+      durationSeconds,
+      testMode = false,
     } = body;
 
     console.log("🎨 [Render] Incoming request:", body);
@@ -46,6 +48,14 @@ export async function POST(request: Request) {
       }
 
       console.log("🚀 [SpaceElevator] Starting render…");
+      console.log("Space Elevator testMode:", testMode);
+      
+      // Apply duration overrides (loop mode)
+      const finalDurationSeconds = testMode ? 10 : (durationSeconds ? Number(durationSeconds) : Number(duration));
+      const motionIntensity = testMode ? 0.4 : Number(intensity);
+      
+      console.log("Duration (seconds):", finalDurationSeconds);
+      console.log("Motion intensity:", motionIntensity);
 
       // Build full image URL (public path → absolute URL)
       const baseUrl =
@@ -56,10 +66,15 @@ export async function POST(request: Request) {
         : `${baseUrl}${elevatorImage}`;
 
       // Generate motion video with LTX → Runware fallback
+      // Force Runware if duration >= 10 seconds
+      const useRunware = finalDurationSeconds >= 10;
+      console.log("Selected provider:", useRunware ? "runware" : "ltx", "for duration:", finalDurationSeconds);
+      
       const videoUrl = await generateSpaceElevatorVideo(
         imageUrl,
-        Number(intensity),
-        Number(duration)
+        motionIntensity,
+        finalDurationSeconds,
+        useRunware
       );
 
       console.log("🎉 [SpaceElevator] Render complete:", videoUrl);
