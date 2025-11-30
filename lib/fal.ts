@@ -1,14 +1,17 @@
 // lib/fal.ts
 
-import { client as falClient } from "@fal-ai/serverless-client";
+import { config, subscribe } from "@fal-ai/serverless-client";
 
 if (!process.env.FAL_KEY) {
   throw new Error("Missing FAL_KEY in environment variables.");
 }
 
-falClient.config({
+config({
   credentials: process.env.FAL_KEY,
 });
 
-export { falClient };
+// Export a client-like object that matches the expected API
+export const falClient = {
+  subscribe,
+};
 
